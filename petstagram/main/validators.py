@@ -23,3 +23,11 @@ def validate_file_max_size_in_mb(max_size):
             raise ValidationError("Max file size is %sMB" % str(max_size))
 
     return validate
+
+
+class ValidateFileMaxSizeInMb:
+    def __init__(self, max_size):
+        self.max_size = max_size
+
+    def __call__(self, value):
+        pass
