@@ -3,7 +3,7 @@ import datetime
 from django.core.validators import MinLengthValidator
 from django.db import models
 
-from petstagram.main.validators import validate_only_letters, validate_file_max_size_in_mb
+from petstagram.main.validators import validate_only_letters, MinDateValidator
 
 
 class Profile(models.Model):
@@ -17,12 +17,6 @@ class Profile(models.Model):
     DO_NOT_SHOW = 'Do not show'
 
     GENDERS = [(x, x) for x in (MALE, FEMALE, DO_NOT_SHOW)]
-    # ^ same as v
-    # GENDERS = [
-    #     ('Male', 'Male'),
-    #     ('Female', 'Female'),
-    #     ('Do not show', 'Do not show'),
-    # ]
 
     first_name = models.CharField(
         max_length=FIRST_NAME_MAX_LENGTH,
@@ -37,7 +31,6 @@ class Profile(models.Model):
         validators=(
             MinLengthValidator(LAST_NAME_MIN_LENGTH),
             validate_only_letters,
-            # always_valid('asd'),
         )
     )
 
@@ -63,6 +56,7 @@ class Profile(models.Model):
         choices=GENDERS,
         null=True,
         blank=True,
+        default=DO_NOT_SHOW,
     )
 
     def __str__(self):
@@ -79,8 +73,10 @@ class Pet(models.Model):
     OTHER = 'Other'
 
     TYPES = [(x, x) for x in (CAT, DOG, BUNNY, PARROT, FISH, OTHER)]
-    #     TYPES = ((x, x) for x in (CAT, DOG, BUNNY, PARROT, FISH, OTHER)) --> not a tuple comprehension, generator
+    # TYPES = ((x, x) for x in (CAT, DOG, BUNNY, PARROT, FISH, OTHER)) --> not a tuple comprehension, generator
     NAME_MAX_LENGTH = 30
+
+    MIN_DATE = datetime.date(1920, 1, 1)
 
     # Fields(Columns)
     name = models.CharField(
@@ -95,6 +91,9 @@ class Pet(models.Model):
     date_of_birth = models.DateField(
         null=True,
         blank=True,
+        validators=(
+            # MinDateValidator(),
+        )
     )
 
     # One-to-one relations
@@ -113,6 +112,8 @@ class Pet(models.Model):
         return datetime.datetime.now().year - self.date_of_birth.year
 
     # Methods
+    def __str__(self):
+        return self.name
 
     # Dunder methods
 
@@ -127,10 +128,6 @@ class PetPhoto(models.Model):
             # validate_file_max_size_in_mb(5),
         )
     )
-    tagged_pets = models.ManyToManyField(
-        Pet,
-        # Validate at least 1 pet
-    )
 
     description = models.TextField(
         null=True,
@@ -138,9 +135,14 @@ class PetPhoto(models.Model):
     )
 
     publication_date = models.DateTimeField(
-        auto_created=True,
+        auto_now_add=True,
     )
 
     likes = models.IntegerField(
         default=0,
+    )
+
+    tagged_pets = models.ManyToManyField(
+        Pet,
+        # Validate at least 1 pet
     )
